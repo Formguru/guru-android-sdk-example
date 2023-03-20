@@ -11,9 +11,7 @@ latest .aar release.
 
 ### With Analysis
 
-First, create a `GuruVideo` with the activity and your API Key:
-
-https://github.com/Formguru/guru-android-sdk-example/blob/d637294f25a54b7e4463989a521ed27125287146/app/src/main/java/com/example/guruandroidsdkexample/MainActivity.kt#L40-L45
+First, [create a GuruVideo](https://github.com/Formguru/guru-android-sdk-example/blob/d637294f25a54b7e4463989a521ed27125287146/app/src/main/java/com/example/guruandroidsdkexample/MainActivity.kt#L40-L45) with the activity and your API Key:
 
 Then initialize the camera - see [CameraSetupFragment.kt](https://github.com/Formguru/guru-android-sdk-example/blob/main/app/src/main/java/com/example/guruandroidsdkexample/CameraSetupFragment.kt) for an example using Android's CameraX library.
 
