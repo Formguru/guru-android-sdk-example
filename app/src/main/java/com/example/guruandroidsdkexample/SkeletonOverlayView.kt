@@ -43,6 +43,11 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
             return
         }
 
+        val isPersonVisible = keypoints!!.maxOf { it.score } > 0.5
+        if (!isPersonVisible) {
+            return
+        }
+
         drawSkeleton(
             canvas,
             keypoints!!,
@@ -108,21 +113,19 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
         if (keypoints == null) {
             return
         }
-        val w = 480.0
-        val h = 640.0
 
         // calculate the person's bounding box from the previous frame
-        val bbox = BoundingBox.fromPreviousFrame(keypoints!!, w.toInt(), h.toInt()) ?: return
+        val bbox = BoundingBox.fromPreviousFrame(keypoints!!) ?: return
 
         paint.color = Color.RED
         paint.strokeWidth = getKeypointRadius().toFloat()
         paint.style = Paint.Style.STROKE
 
         canvas.drawRect(
-            translateX(bbox.x1 / w),
-            translateY(bbox.y1 / h),
-            translateX(bbox.x2 / w),
-            translateY(bbox.y2 / h),
+            translateX(bbox.x1.toDouble()),
+            translateY(bbox.y1.toDouble()),
+            translateX(bbox.x2.toDouble()),
+            translateY(bbox.y2.toDouble()),
             paint
         )
     }

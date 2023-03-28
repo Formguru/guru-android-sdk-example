@@ -44,9 +44,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     applicationContext,
                 )
             } else {
-                poseTracker = PoseTracker.create(
+                poseTracker = PoseTracker.createWithModel(
                     API_KEY,
                     applicationContext,
+                    "posemodel.onnx",
+                    assets,
                 )
             }
 
@@ -59,6 +61,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     @SuppressLint("UnsafeOptInUsageError")
     private suspend fun onNewImage(img: ImageProxy) {
         if (guruVideo == null && poseTracker == null) {
+            return
+        }
+        if (img.image == null) {
             return
         }
 
