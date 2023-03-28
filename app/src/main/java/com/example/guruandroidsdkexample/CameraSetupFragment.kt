@@ -98,6 +98,8 @@ class CameraSetupFragment : Fragment {
         val imageAnalysis =
             ImageAnalysis.Builder()
                 .setTargetResolution(IMAGE_SIZE)
+                // YUV_420_888 is the default, but just to make it explicit...
+                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
         imageAnalysis.setAnalyzer(executor) { imageProxy: ImageProxy ->
