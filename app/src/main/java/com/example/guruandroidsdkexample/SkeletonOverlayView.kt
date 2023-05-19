@@ -4,6 +4,7 @@ import ai.getguru.androidsdk.*
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Size
 import android.view.View
 import kotlin.math.ceil
 import kotlin.math.pow
@@ -18,24 +19,15 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
             this.invalidate()
         }
     var analysis: Analysis? = null
-    var targetWidth: Float = this.width.toFloat()
-    var targetHeight: Float = this.height.toFloat()
+    var previewAspectRatio: Float = 1.0f
+    var imageAspectRatio: Float = 1.0f
     private var currentFps: Float? = null
 
     public override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         assert(top == 0)
         assert(left == 0)
-        val previewAspectRatio = right.toFloat() / bottom
-        val imageAspectRatio = .75f
-
-        if (previewAspectRatio < imageAspectRatio) {
-            targetWidth = right.toFloat()
-            targetHeight = right.toFloat() / imageAspectRatio
-        } else {
-            targetHeight = bottom.toFloat()
-            targetWidth = bottom.toFloat() * imageAspectRatio
-        }
+        previewAspectRatio = right.toFloat() / bottom
     }
 
     public override fun onDraw(canvas: Canvas) {
@@ -48,29 +40,41 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
             return
         }
 
+        val dimensions = calculateTargetDimensions()
+
         drawSkeleton(
             canvas,
             keypoints!!,
+            dimensions,
             color = Color.RED,
         )
         drawFps(canvas)
         drawActivityAndReps(canvas)
         if (SHOULD_DRAW_BBOX) {
-            drawBbox(canvas)
+            drawBbox(canvas, dimensions)
         }
     }
 
-    private fun translateX(x: Double): Float {
-        return ((1.0f - x) * targetWidth).toFloat()
+    private fun translateX(x: Double, dimensions: Size): Float {
+        return ((1.0f - x) * dimensions.width).toFloat()
     }
 
-    private fun translateY(y: Double): Float {
-        return (y * targetHeight).toFloat()
+    private fun translateY(y: Double, dimensions: Size): Float {
+        return (y * dimensions.height).toFloat()
+    }
+
+    private fun calculateTargetDimensions(): Size {
+        return if (previewAspectRatio < imageAspectRatio) {
+            Size(right, (right.toFloat() / imageAspectRatio).toInt())
+        } else {
+            Size(bottom, (bottom.toFloat() / imageAspectRatio).toInt())
+        }
     }
 
     private fun drawSkeleton(
         canvas: Canvas,
         keypoints: Keypoints,
+        dimensions: Size,
         shouldDrawBones: Boolean = true,
         color: Int = Color.RED,
     ) {
@@ -78,12 +82,12 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
         keypoints.getPairs().forEach { pair ->
             listOf(pair.first, pair.second).forEach {
                 if (!alreadyDrawn.contains(it)) {
-                    drawKeypoint(canvas, it, color=color)
+                    drawKeypoint(canvas, it, dimensions, color=color)
                     alreadyDrawn.add(it)
                 }
             }
             if (shouldDrawBones) {
-                drawLine(canvas, pair.first, pair.second)
+                drawLine(canvas, pair.first, pair.second, dimensions)
             }
         }
     }
@@ -109,7 +113,7 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
         return midpointX - bounds.width() / 2f
     }
 
-    private fun drawBbox(canvas: Canvas) {
+    private fun drawBbox(canvas: Canvas, dimensions: Size) {
         if (keypoints == null) {
             return
         }
@@ -122,10 +126,10 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
         paint.style = Paint.Style.STROKE
 
         canvas.drawRect(
-            translateX(bbox.x1.toDouble()),
-            translateY(bbox.y1.toDouble()),
-            translateX(bbox.x2.toDouble()),
-            translateY(bbox.y2.toDouble()),
+            translateX(bbox.x1.toDouble(), dimensions),
+            translateY(bbox.y1.toDouble(), dimensions),
+            translateX(bbox.x2.toDouble(), dimensions),
+            translateY(bbox.y2.toDouble(), dimensions),
             paint
         )
     }
@@ -144,6 +148,7 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
     private fun drawKeypoint(
         canvas: Canvas,
         k: Keypoint,
+        dimensions: Size,
         color: Int = Color.RED,
     ) {
         if (k.score < MIN_SCORE_THRESHOLD) {
@@ -154,8 +159,8 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
         paint.alpha = (255 * .75).toInt()
 
         val radius = getKeypointRadius()
-        val x = translateX(k.x)
-        val y = translateY(k.y)
+        val x = translateX(k.x, dimensions)
+        val y = translateY(k.y, dimensions)
         canvas.drawCircle(x, y, radius.toFloat(), paint)
     }
 
@@ -166,7 +171,7 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
         return ceil(diagonalLength * .005).toInt()
     }
 
-    private fun drawLine(canvas: Canvas, p1: Keypoint, p2: Keypoint, width: Int? = null, height: Int? = null) {
+    private fun drawLine(canvas: Canvas, p1: Keypoint, p2: Keypoint, dimensions: Size) {
         if (p1.score < MIN_SCORE_THRESHOLD || p2.score < MIN_SCORE_THRESHOLD) {
             return
         }
@@ -176,10 +181,10 @@ class SkeletonOverlayView(context: Context?, attrs: AttributeSet?) : View(contex
         paint.strokeWidth = getKeypointRadius().toFloat()
 
         canvas.drawLine(
-            translateX(p1.x),
-            translateY(p1.y),
-            translateX(p2.x),
-            translateY(p2.y),
+            translateX(p1.x, dimensions),
+            translateY(p1.y, dimensions),
+            translateX(p2.x, dimensions),
+            translateY(p2.y, dimensions),
             paint
         )
     }

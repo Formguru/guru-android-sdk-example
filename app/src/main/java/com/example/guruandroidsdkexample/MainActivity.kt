@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     // Set to true if you want an ai.getguru.androidsdk.InferenceResult, which includes analysis
     // Set to false if all you want is ai.getguru.androidsdk.Keypoints
-    private val sendToGuruForAnalysis: Boolean = false
+    private val sendToGuruForAnalysis: Boolean = true
 
     override val coroutineContext
         get() = Dispatchers.IO + loadGuruJob
@@ -69,9 +69,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         if (sendToGuruForAnalysis) {
             val results = guruVideo!!.newFrame(img.image!!, img.imageInfo.rotationDegrees)
+            overlaysView?.imageAspectRatio = img.height.toFloat()/ img.width.toFloat()
             overlaysView?.analysis = results?.analysis
             overlaysView?.keypoints = results?.skeleton()
         } else {
+            overlaysView?.imageAspectRatio = img.height.toFloat()/ img.width.toFloat()
             overlaysView?.keypoints = poseTracker!!.newFrame(img.image!!, img.imageInfo.rotationDegrees)
         }
         fpsGauge.onFrameFinish()

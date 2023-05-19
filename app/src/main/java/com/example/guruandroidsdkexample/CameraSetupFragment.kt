@@ -108,6 +108,7 @@ class CameraSetupFragment : Fragment {
         }
 
         val preview = Preview.Builder()
+            .setTargetResolution(IMAGE_SIZE)
             .build()
         preview.setSurfaceProvider(previewView!!.surfaceProvider)
         // FIT_CENTER looks better, but may add margins that you'll need to account for if
